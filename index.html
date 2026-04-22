@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>SPA - Penyimpanan Skala Besar (IndexedDB + OPFS)</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- HALAMAN UTAMA (View) -->
+<div id="mainView" class="app-view">
+    <div class="main-container">
+        <!-- Daftar item + pencarian -->
+        <div class="content-left">
+            <div class="search-header">
+                <h2>📚 Koleksi Data 
+                    <button id="openEditPageBtn" class="btn-edit-nav">✏️ Kelola & Edit</button>
+                </h2>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Cari: kata kunci biasa atau #tag (contoh: baju tidur #lengan-panjang)">
+                </div>
+                <div class="search-hint">💡 Gunakan # untuk filter tag.</div>
+            </div>
+            <div class="item-list-area">
+                <div id="itemsListContainer" class="items-grid"></div>
+                <div class="pagination" id="mainPagination">
+                    <button id="mainPrevPageBtn" disabled>◀ Sebelumnya</button>
+                    <span class="page-info" id="mainPageInfo">Halaman 1 / 1</span>
+                    <button id="mainNextPageBtn" disabled>Berikutnya ▶</button>
+                </div>
+            </div>
+        </div>
+        <!-- Sidebar detail -->
+        <div class="sidebar-right">
+            <div class="sidebar-title">📌 Detail & Informasi</div>
+            <div id="sidebarDetail">
+                <div class="detail-image"><img id="detailImg" src="https://picsum.photos/id/20/300/200"></div>
+                <div class="info-section"><h4>📖 Deskripsi</h4><p id="detailDescText">Pilih item</p></div>
+                <div class="info-section"><h4>🏷️ Tags</h4><div id="detailTags"></div></div>
+                <div class="info-section"><h4>📋 Informasi Tambahan</h4><div id="detailExtraFields"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HALAMAN EDIT (Kelola Data) -->
+<div id="editView" class="edit-view hidden">
+    <div class="edit-container">
+        <!-- Form tambah/edit -->
+        <div class="edit-card">
+            <h2>✏️ Tambah / Edit Data <button id="backToMainBtn" class="btn-back">← Kembali</button></h2>
+            <form id="itemForm">
+                <input type="hidden" id="editId">
+                <div class="form-group"><label>Nama Item *</label><input type="text" id="editName" required></div>
+                <div class="form-group"><label>Deskripsi</label><textarea id="editDesc" rows="2"></textarea></div>
+                <div class="form-group"><label>URL Gambar</label><input type="text" id="editImageUrl"></div>
+                <div class="form-group"><label>Tags (koma)</label><input type="text" id="editTags"></div>
+                <div class="extra-fields-container">
+                    <label style="font-weight:600;">📌 Informasi Tambahan (Key, Warna Key, Value, Warna Value)</label>
+                    <div id="extraFieldsList"></div>
+                    <button type="button" id="addExtraFieldBtn" class="btn-add-extra">+ Tambah Field</button>
+                </div>
+                <div><button type="submit" class="btn-save">💾 Simpan</button><button type="button" id="resetFormBtn" class="btn-back">Reset</button></div>
+            </form>
+        </div>
+
+        <!-- Penyimpanan skala besar (IndexedDB + OPFS) -->
+        <div class="edit-card">
+            <h3>📁 Penyimpanan Skala Besar</h3>
+            <div class="storage-info">
+                <span>📦 Total item: <strong id="totalItemsCount">0</strong></span>
+                <span>💾 Estimasi ukuran: <strong id="storageSize">0 KB</strong></span>
+                <span>⚙️ Metode: <strong>IndexedDB</strong></span>
+            </div>
+            <div class="toolbar">
+                <button id="backupToOpfsBtn" class="btn-opfs">💾 Backup ke OPFS</button>
+                <button id="restoreFromOpfsBtn" class="btn-opfs">📂 Restore dari OPFS</button>
+                <button id="exportDbBtn" class="btn-outline">📤 Ekspor JSON (semua data)</button>
+                <button id="importDbBtn" class="btn-outline btn-import">📂 Impor JSON (ganti semua)</button>
+                <button id="clearAllDataBtn" class="btn-delete-selected" style="background:#dc2626;">⚠️ Hapus Semua Data</button>
+            </div>
+            <div class="warning" id="storageWarning" style="display:none;"></div>
+            <input type="file" id="importFileInput" accept=".json" style="display:none">
+        </div>
+
+        <!-- Import/Export JSON/XML/CSV dengan berbagai mode (dari idx12) -->
+        <div class="edit-card">
+            <h3>📁 Import / Export Database (JSON/XML/CSV)</h3>
+            <div class="toolbar">
+                <button id="exportJsonBtn" class="btn-outline">📤 JSON (dengan warna)</button>
+                <button id="exportXmlBtn" class="btn-outline">📤 XML (dengan warna)</button>
+                <button id="exportCsvBtn" class="btn-outline btn-csv">📊 CSV (tanpa warna)</button>
+                <button id="importCsvBtn" class="btn-outline btn-csv-import">📂 Import CSV</button>
+                <button id="importFileLegacyBtn" class="btn-outline btn-import">📂 Import JSON/XML</button>
+            </div>
+            <div class="import-options">
+                <label>Mode Import:</label>
+                <select id="importModeSelect">
+                    <option value="replace">🔄 Replace All (ganti semua data)</option>
+                    <option value="append">➕ Append All (tambah semua, tanpa cek)</option>
+                    <option value="update">♻️ Update Existing (by ID, tambah jika baru)</option>
+                    <option value="mergeSkip">🔀 Merge & Skip Duplicates (hanya tambah baru)</option>
+                    <option value="overwrite">✏️ Overwrite by ID (timpa jika ID ada, tambah jika tidak)</option>
+                </select>
+                <label>Match Key:</label>
+                <select id="importMatchKey">
+                    <option value="id">ID (default)</option>
+                    <option value="name">Nama (case-sensitive)</option>
+                </select>
+                <div style="margin-top:8px">
+                    <label><input type="checkbox" id="clearBeforeImport"> Hapus semua data sebelum import (hanya untuk mode selain Replace)</label>
+                </div>
+            </div>
+            <div class="warning" id="importWarning" style="display:none;"></div>
+            <input type="file" id="fileImporter" accept=".json,.xml" style="display:none">
+            <input type="file" id="csvImporter" accept=".csv" style="display:none">
+        </div>
+
+        <!-- Daftar semua data (edit view) dengan checkbox, hapus massal, hapus duplikat -->
+        <div class="edit-list-area">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
+                <h3>📋 Semua Data - <span id="totalDataCount">0</span> item</h3>
+                <div style="display: flex; gap: 12px;">
+                    <label class="select-all-label">
+                        <input type="checkbox" id="selectAllCheckbox"> Pilih Semua di halaman ini
+                    </label>
+                    <button id="deleteSelectedBtn" class="btn-delete-selected" disabled>🗑️ Hapus Terpilih (0)</button>
+                    <button id="deduplicateBtn" class="btn-deduplicate">🧹 Hapus Duplikat</button>
+                </div>
+            </div>
+            <div class="edit-search">
+                <input type="text" id="editSearchInput" placeholder="Cari berdasarkan nama atau tag...">
+            </div>
+            <div id="editItemsList" class="edit-items-list"></div>
+            <div class="pagination">
+                <button id="prevPageBtn" disabled>◀ Sebelumnya</button>
+                <span class="page-info" id="pageInfo">Halaman 1 / 1</span>
+                <button id="nextPageBtn" disabled>Berikutnya ▶</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
