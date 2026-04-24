@@ -8,110 +8,65 @@ dengan fitur:
  data tambahan:
 import/expot data  xml/json/csv
 
+# 🗄️ SPA Manajemen Data Skala Besar (IndexedDB + OPFS)
 
-Rangkuman Proyek: SPA Manajemen Data Skala Besar (IndexedDB + OPFS)
-Tujuan Proyek
-Aplikasi Single Page Application (SPA) untuk mengelola koleksi data dalam jumlah besar (hingga jutaan item) secara lokal di browser. Data disimpan permanen menggunakan IndexedDB (penyimpanan utama) dan dapat dicadangkan ke OPFS (Origin Private File System) atau diekspor/impor dalam berbagai format.
+Aplikasi **Single Page Application (SPA)** untuk mengelola koleksi data dalam jumlah besar (hingga jutaan item) secara lokal di browser. Data disimpan permanen menggunakan **IndexedDB** dengan fitur pencarian, tag, field tambahan berwarna, serta backup/restore ke **OPFS** (Origin Private File System). Mendukung impor/ekspor dalam format **JSON, XML, dan CSV** dengan berbagai mode penggabungan data.
 
-Teknologi yang Digunakan
-Frontend murni: HTML5, CSS3, JavaScript (ES6+)
+![Demo](https://via.placeholder.com/800x400?text=Demo+Screenshot)  
+*(Screenshot: tampilan utama dengan daftar item dan sidebar detail)*
 
-Penyimpanan: IndexedDB (operasi asinkron, mendukung indeks), OPFS (backup/restore via File System Access API)
+---
 
-Format data: JSON, XML, CSV (import/export)
+## ✨ Fitur Utama
 
-Desain responsif: CSS Grid, Flexbox, media queries, aksesibilitas (minimal tombol 44x44px)
+### 📱 Dua Tampilan
+- **Tampilan Publik** – daftar item dengan pencarian (kata kunci biasa + filter tag `#tag`), pagination, dan panel detail.
+- **Tampilan Edit** – manajemen penuh data: tambah, edit, hapus (per item/massal), hapus duplikat, dan impor/ekspor.
 
-Fitur Utama
-1. Dua Tampilan Utama
-View Publik → daftar item dengan pencarian (#tag + kata kunci), pagination, dan detail sidebar.
+### 🧠 Manajemen Data Lanjutan
+- **Field tambahan dinamis** (key-value) dengan warna teks berbeda untuk key dan value.
+- **Deteksi dan hapus duplikat** berdasarkan semua field (termasuk warna).
+- **Pencarian real-time** pada edit view (berdasarkan nama/tag).
+- **Checkbox seleksi** per halaman + tombol hapus terpilih.
 
-Edit View → manajemen penuh data (tambah, edit, hapus, hapus massal, hapus duplikat).
+### 📁 Impor & Ekspor Multi-Format
+| Format | Ekspor | Impor | Catatan |
+|--------|--------|-------|---------|
+| JSON   | ✅     | ✅    | Mendukung field + warna |
+| XML    | ✅     | ✅    | Mendukung field + warna |
+| CSV    | ✅     | ✅    | CSV ekspor tanpa warna (hanya key-value) |
 
-2. Manajemen Data Lanjutan
-CRUD lengkap dengan field tambahan dinamis (key-value + warna teks).
+**Mode impor yang tersedia:**
+- Replace All – mengganti semua data
+- Append All – menambah semua (tanpa cek duplikat)
+- Update Existing – update jika ID/Name sama, tambah jika baru
+- Merge & Skip Duplicates – hanya tambah data baru
+- Overwrite by ID/Name – timpa jika ada, tambah jika tidak
 
-Checkbox seleksi + hapus terpilih per halaman.
+### 💾 Backup & Restore Skala Besar
+- **Backup ke OPFS** – simpan seluruh database ke file `.json` di sistem file lokal (menggunakan File System Access API).
+- **Restore dari OPFS** – muat file `.json` dari lokal dan ganti database.
+- **Fallback** – jika browser tidak mendukung OPFS, backup/restore via download/upload biasa.
 
-Deteksi & hapus duplikat (berdasarkan semua field termasuk warna).
+### 📊 Informasi Penyimpanan
+- Total item dan estimasi ukuran penyimpanan (dalam KB/bytes).
+- Metode penyimpanan: IndexedDB.
 
-Pencarian real-time pada edit view (filter berdasarkan nama/tag).
+---
 
-3. Impor & Ekspor Multi-format
-Ekspor: JSON, XML, CSV (CSV tanpa informasi warna).
+## 🛠 Teknologi yang Digunakan
 
-Impor: JSON, XML, CSV dengan 5 mode:
+- **HTML5, CSS3, JavaScript (ES6+)** – tanpa library/framework eksternal.
+- **IndexedDB** – penyimpanan utama asinkron, mendukung indeks (nama, tag).
+- **OPFS (Origin Private File System)** – backup/restore file besar.
+- **File System Access API** – dialog simpan/buka file (fallback tersedia).
+- **CSS Grid & Flexbox** – desain responsif (mobile friendly, tombol minimal 44x44px).
 
-Replace All (ganti semua)
+---
 
-Append All (tambah tanpa cek)
+## 🚀 Cara Menjalankan
 
-Update Existing (update jika ID/name sama, tambah jika baru)
-
-Merge & Skip Duplicates (hanya tambah baru)
-
-Overwrite by ID/Name (timpa jika ada)
-
-Mendukung match key (ID atau name) dan opsi hapus sebelum import.
-
-4. Backup & Restore Skala Besar
-Backup ke OPFS → simpan file .json ke sistem file lokal (dialog save).
-
-Restore dari OPFS → buka file .json dari lokal dan ganti database.
-
-Fallback ke download/upload biasa jika File System Access API tidak didukung.
-
-5. Informasi & Utilitas
-Menampilkan total item dan estimasi ukuran penyimpanan.
-
-Reset form, validasi input, konfirmasi hapus massal.
-
-Dukungan gambar (URL bebas, default dari picsum).
-
-Arsitektur & Alur Data
-IndexedDB wrapper → fungsi openIndexedDB, getAllItems, saveItem, deleteMultipleItems, clearAllItems, replaceAllItems.
-
-Cache global currentItems untuk mengurangi akses DB saat render.
-
-Dua sistem pagination independen (main view: 20 item/halaman, edit view: 20 item/halaman).
-
-State terpisah untuk pencarian, filter, item terpilih, extra fields form.
-
-Render ulang otomatis setelah setiap operasi (refreshCache → refreshMain/refreshEdit).
-
-Keamanan & Kinerja
-Semua operasi DB bersifat asinkron (async/await) agar tidak memblokir UI.
-
-Escape HTML untuk mencegah XSS.
-
-Validasi data impor (nama wajib, format array).
-
-Tidak menggunakan library eksternal (vanilla JS).
-
-Contoh Data Default
-Jika database kosong, akan dibuat 2 item contoh:
-
-Karakter RPG (dengan extra field berwarna)
-
-Baju Tidur Wanita (extra field biasa)
-
-Cara Menjalankan
-Cukup buka file index.html di browser modern (Chrome/Edge/Firefox). IndexedDB akan otomatis dibuat, dan data tersimpan secara lokal hingga dihapus manual melalui fitur “Hapus Semua Data” atau melalui devtools.
-
-Kelebihan Proyek
-Mendukung data besar (IndexedDB tahan hingga ratusan MB bahkan GB).
-
-Impor/ekspor fleksibel dengan mode merge/update.
-
-Backup ke OPFS lebih aman dan tanpa batasan ukuran (sebanding dengan file sistem).
-
-UI modern, responsif, dan ramah sentuhan (mobile-friendly).
-
-Keterbatasan
-OPFS hanya bekerja di browser dengan dukungan File System Access API (Chromium-based).
-
-CSV tidak mempertahankan warna teks pada extra field (hanya key-value).
-
-Pencarian tag di main view hanya mendukung awalan # (tanpa saran otomatis).
- 
- 
+1. **Clone repositori**  
+   ```bash
+   git clone https://github.com/username/nama-repo.git
+   cd nama-repo
