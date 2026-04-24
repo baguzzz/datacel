@@ -68,5 +68,5 @@ Aplikasi **Single Page Application (SPA)** untuk mengelola koleksi data dalam ju
 
 1. **Clone repositori**  
    ```bash
-   git clone https://github.com/username/nama-repo.git
-   cd nama-repo
+   git clone https://github.com/baguzzz/datacel.git
+   cd datacel
